@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Ghép Hình Toán Học</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+
+        .game-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 40px;
+            border-radius: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            z-index: 100;
+            text-align: center;
+        }
+
+        .instruction {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .score {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .level-info {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            color: #333;
+            z-index: 100;
+        }
+
+        .equation-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            z-index: 50;
+        }
+
+        .drop-slot {
+            width: 80px;
+            height: 80px;
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(102, 126, 234, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .drop-slot.highlight {
+            border-color: #00b894;
+            background: rgba(0, 184, 148, 0.2);
+            transform: scale(1.05);
+        }
+
+        .drop-slot.filled {
+            border-color: #00b894;
+            border-style: solid;
+            background: rgba(0, 184, 148, 0.3);
+        }
+
+        .equals-sign {
+            font-size: 36px;
+            font-weight: bold;
+            color: #333;
+            margin: 0 10px;
+        }
+
+        .pieces-container {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 90vw;
+            z-index: 40;
+        }
+
+        .puzzle-piece {
+            width: 70px;
+            height: 70px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            border: 3px solid rgba(255,255,255,0.3);
+            position: relative;
+        }
+
+        .puzzle-piece:hover {
+            transform: scale(1.1);
+        }
+
+        .puzzle-piece.selected {
+            transform: scale(1.2);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+
+        .piece-number {
+            background: linear-gradient(45deg, #fd79a8, #fdcb6e);
+        }
+
+        .piece-operator {
+            background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+        }
+
+        .piece-result {
+            background: linear-gradient(45deg, #00b894, #00cec9);
+        }
+
+        .check-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(45deg, #00b894, #00cec9);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            z-index: 60;
+        }
+
+        .check-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+        }
+
+        .check-btn:disabled {
+            background: #ddd;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .feedback {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: bold;
+            z-index: 200;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            animation: feedbackAnim 1.5s ease-out forwards;
+            pointer-events: none;
+        }
+
+        .feedback.correct {
+            color: #00b894;
+        }
+
+        .feedback.wrong {
+            color: #e17055;
+        }
+
+        @keyframes feedbackAnim {
+            0% { 
+                transform: translate(-50%, -50%) scale(0) rotate(-180deg); 
+                opacity: 0; 
+            }
+            50% { 
+                transform: translate(-50%, -50%) scale(1.2) rotate(0deg); 
+                opacity: 1; 
+            }
+            100% { 
+                transform: translate(-50%, -50%) scale(0) rotate(180deg); 
+                opacity: 0; 
+            }
+        }
+
+        .game-over {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.98);
+            padding: 40px;
+            border-radius: 25px;
+            text-align: center;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            z-index: 300;
+            display: none;
+        }
+
+        .restart-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .restart-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: #ffd700;
+            pointer-events: none;
+            z-index: 150;
+        }
+
+        @keyframes confettiDrop {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translate(-50%, -50%) translateX(0); }
+            25% { transform: translate(-50%, -50%) translateX(-10px); }
+            75% { transform: translate(-50%, -50%) translateX(10px); }
+        }
+
+        .shake {
+            animation: shake 0.6s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <div class="instruction">Kéo thả để hoàn thành phép tính!</div>
+            <div class="score">Điểm: <span id="scoreValue">0</span></div>
+        </div>
+
+        <div class="level-info">
+            Câu <span id="levelValue">1</span>/10
+        </div>
+
+        <div class="equation-container">
+            <div class="drop-slot" data-slot="num1"></div>
+            <div class="drop-slot" data-slot="operator"></div>
+            <div class="drop-slot" data-slot="num2"></div>
+            <div class="equals-sign">=</div>
+            <div class="drop-slot" data-slot="result"></div>
+        </div>
+
+        <div class="pieces-container" id="piecesContainer">
+            <!-- Puzzle pieces sẽ được tạo bằng JavaScript -->
+        </div>
+
+        <button class="check-btn" id="checkButton" disabled>Kiểm tra</button>
+
+        <div class="game-over" id="gameOverScreen">
+            <h2>🎉 Xuất sắc! 🎉</h2>
+            <p>Bạn đã hoàn thành tất cả các câu hỏi!</p>
+            <p>Điểm số cuối cùng: <span id="finalScoreValue">0</span></p>
+            <button class="restart-btn" onclick="restartGame()">Chơi lại</button>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        const gameState = {
+            score: 0,
+            level: 1,
+            maxLevel: 10,
+            currentEquation: {},
+            selectedPiece: null,
+            slots: {
+                num1: null,
+                operator: null,
+                num2: null,
+                result: null
+            }
+        };
+
+        // Operators
+        const operators = ['+', '-', '×'];
+
+        // Sound function
+        function playSound(frequency, duration = 200, type = 'sine') {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = frequency;
+                oscillator.type = type;
+                
+                gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+                
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + duration / 1000);
+            } catch (e) {
+                console.log('Audio not supported');
+            }
+        }
+
+        // Generate equation
+        function generateEquation() {
+            const operator = operators[Math.floor(Math.random() * operators.length)];
+            let num1, num2, result;
+
+            switch(operator) {
+                case '+':
+                    num1 = Math.floor(Math.random() * 15) + 1;
+                    num2 = Math.floor(Math.random() * 15) + 1;
+                    result = num1 + num2;
+                    break;
+                case '-':
+                    num1 = Math.floor(Math.random() * 20) + 10;
+                    num2 = Math.floor(Math.random() * num1) + 1;
+                    result = num1 - num2;
+                    break;
+                case '×':
+                    num1 = Math.floor(Math.random() * 8) + 1;
+                    num2 = Math.floor(Math.random() * 8) + 1;
+                    result = num1 * num2;
+                    break;
+            }
+
+            gameState.currentEquation = { num1, operator, num2, result };
+            createPuzzlePieces();
+        }
+
+        // Create puzzle pieces
+        function createPuzzlePieces() {
+            const container = document.getElementById('piecesContainer');
+            container.innerHTML = '';
+
+            // Clear slots
+            clearAllSlots();
+
+            const { num1, operator, num2, result } = gameState.currentEquation;
+
+            // Correct pieces
+            const correctPieces = [
+                { value: num1, type: 'number' },
+                { value: operator, type: 'operator' },
+                { value: num2, type: 'number' },
+                { value: result, type: 'result' }
+            ];
+
+            // Wrong pieces
+            const wrongPieces = [];
+            
+            // Add wrong numbers
+            for (let i = 0; i < 3; i++) {
+                let wrongValue;
+                do {
+                    wrongValue = Math.floor(Math.random() * 30) + 1;
+                } while ([num1, num2, result].includes(wrongValue));
+                wrongPieces.push({ value: wrongValue, type: 'number' });
+            }
+
+            // Add wrong operator
+            const wrongOperators = operators.filter(op => op !== operator);
+            if (wrongOperators.length > 0) {
+                wrongPieces.push({ 
+                    value: wrongOperators[Math.floor(Math.random() * wrongOperators.length)], 
+                    type: 'operator' 
+                });
+            }
+
+            // Combine and shuffle
+            const allPieces = [...correctPieces, ...wrongPieces];
+            shuffleArray(allPieces);
+
+            // Create DOM elements
+            allPieces.forEach((piece, index) => {
+                createPiece(piece.value, piece.type, index);
+            });
+        }
+
+        // Create individual piece
+        function createPiece(value, type, index) {
+            const piece = document.createElement('div');
+            let className = 'puzzle-piece';
+            
+            if (type === 'operator') {
+                className += ' piece-operator';
+            } else if (type === 'result') {
+                className += ' piece-result';
+            } else {
+                className += ' piece-number';
+            }
+
+            piece.className = className;
+            piece.textContent = value;
+            piece.dataset.value = value;
+            piece.dataset.type = type;
+
+            // Add click event
+            piece.addEventListener('click', () => selectPiece(piece));
+
+            document.getElementById('piecesContainer').appendChild(piece);
+
+            // Animation
+            piece.style.transform = 'scale(0) rotate(180deg)';
+            piece.style.opacity = '0';
+            
+            setTimeout(() => {
+                piece.style.transition = 'all 0.5s ease';
+                piece.style.transform = 'scale(1) rotate(0deg)';
+                piece.style.opacity = '1';
+            }, index * 100);
+        }
+
+        // Shuffle array
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // Select piece
+        function selectPiece(piece) {
+            // Deselect previous
+            if (gameState.selectedPiece) {
+                gameState.selectedPiece.classList.remove('selected');
+            }
+
+            // Select new piece
+            gameState.selectedPiece = piece;
+            piece.classList.add('selected');
+            playSound(400, 100);
+
+            // Highlight compatible slots
+            highlightCompatibleSlots(piece.dataset.type);
+        }
+
+        // Highlight compatible slots
+        function highlightCompatibleSlots(pieceType) {
+            document.querySelectorAll('.drop-slot').forEach(slot => {
+                slot.classList.remove('highlight');
+                
+                const slotType = slot.dataset.slot;
+                if (canPlacePiece(pieceType, slotType)) {
+                    slot.classList.add('highlight');
+                }
+            });
+        }
+
+        // Check if piece can be placed in slot
+        function canPlacePiece(pieceType, slotType) {
+            if (pieceType === 'operator' && slotType === 'operator') return true;
+            if (pieceType === 'number' && ['num1', 'num2'].includes(slotType)) return true;
+            if (pieceType === 'result' && slotType === 'result') return true;
+            return false;
+        }
+
+        // Setup slot events
+        function setupSlotEvents() {
+            document.querySelectorAll('.drop-slot').forEach(slot => {
+                slot.addEventListener('click', () => {
+                    if (gameState.selectedPiece && canPlacePiece(
+                        gameState.selectedPiece.dataset.type, 
+                        slot.dataset.slot
+                    )) {
+                        placePieceInSlot(gameState.selectedPiece, slot);
+                    }
+                });
+            });
+        }
+
+        // Place piece in slot
+        function placePieceInSlot(piece, slot) {
+            const slotType = slot.dataset.slot;
+            
+            // Clear slot if occupied
+            if (slot.firstChild) {
+                returnPieceToContainer(slot.firstChild);
+            }
+
+            // Create piece copy in slot
+            const slotPiece = piece.cloneNode(true);
+            slotPiece.classList.remove('selected');
+            slotPiece.style.width = '60px';
+            slotPiece.style.height = '60px';
+            slotPiece.style.fontSize = '20px';
+            slotPiece.style.cursor = 'pointer';
+            slotPiece.addEventListener('click', () => returnPieceToContainer(slotPiece));
+
+            slot.appendChild(slotPiece);
+            slot.classList.add('filled');
+
+            // Store in game state
+            gameState.slots[slotType] = piece.dataset.value;
+
+            // Remove original piece
+            piece.remove();
+            gameState.selectedPiece = null;
+
+            // Clear highlights
+            document.querySelectorAll('.drop-slot').forEach(s => s.classList.remove('highlight'));
+
+            playSound(523, 200);
+            updateCheckButton();
+        }
+
+        // Return piece to container
+        function returnPieceToContainer(slotPiece) {
+            const container = document.getElementById('piecesContainer');
+            
+            // Create new piece in container
+            const newPiece = document.createElement('div');
+            let className = 'puzzle-piece';
+            
+            const type = slotPiece.dataset.type;
+            if (type === 'operator') {
+                className += ' piece-operator';
+            } else if (type === 'result') {
+                className += ' piece-result';
+            } else {
+                className += ' piece-number';
+            }
+
+            newPiece.className = className;
+            newPiece.textContent = slotPiece.textContent;
+            newPiece.dataset.value = slotPiece.dataset.value;
+            newPiece.dataset.type = slotPiece.dataset.type;
+            newPiece.addEventListener('click', () => selectPiece(newPiece));
+
+            container.appendChild(newPiece);
+
+            // Clear slot
+            const slot = slotPiece.parentElement;
+            slot.innerHTML = '';
+            slot.classList.remove('filled');
+            
+            // Clear from game state
+            const slotType = slot.dataset.slot;
+            gameState.slots[slotType] = null;
+
+            updateCheckButton();
+        }
+
+        // Clear all slots
+        function clearAllSlots() {
+            document.querySelectorAll('.drop-slot').forEach(slot => {
+                slot.innerHTML = '';
+                slot.classList.remove('filled', 'highlight');
+            });
+            
+            gameState.slots = {
+                num1: null,
+                operator: null,
+                num2: null,
+                result: null
+            };
+        }
+
+        // Update check button
+        function updateCheckButton() {
+            const button = document.getElementById('checkButton');
+            const allFilled = Object.values(gameState.slots).every(slot => slot !== null);
+            
+            button.disabled = !allFilled;
+        }
+
+        // Check answer
+        function checkAnswer() {
+            const { num1, operator, num2, result } = gameState.currentEquation;
+            const slots = gameState.slots;
+
+            const isCorrect = (
+                parseInt(slots.num1) === num1 &&
+                slots.operator === operator &&
+                parseInt(slots.num2) === num2 &&
+                parseInt(slots.result) === result
+            );
+
+            if (isCorrect) {
+                showFeedback('🎉 Chính xác! 🎉', 'correct');
+                playSound(659, 400);
+                gameState.score += 15;
+                updateScore();
+                createConfetti();
+                
+                setTimeout(() => {
+                    if (gameState.level >= gameState.maxLevel) {
+                        endGame();
+                    } else {
+                        nextLevel();
+                    }
+                }, 2000);
+            } else {
+                showFeedback('❌ Thử lại nhé! ❌', 'wrong');
+                playSound(220, 400, 'sawtooth');
+                
+                // Shake animation
+                const container = document.querySelector('.equation-container');
+                container.classList.add('shake');
+                setTimeout(() => {
+                    container.classList.remove('shake');
+                }, 600);
+            }
+        }
+
+        // Show feedback
+        function showFeedback(text, type) {
+            const feedback = document.createElement('div');
+            feedback.className = `feedback ${type}`;
+            feedback.textContent = text;
+            document.body.appendChild(feedback);
+
+            setTimeout(() => {
+                if (feedback.parentNode) {
+                    feedback.remove();
+                }
+            }, 1500);
+        }
+
+        // Create confetti
+        function createConfetti() {
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * window.innerWidth + 'px';
+                    confetti.style.top = '-20px';
+                    confetti.style.background = `hsl(${Math.random() * 360}, 70%, 60%)`;
+                    confetti.style.animation = `confettiDrop ${2 + Math.random()}s linear forwards`;
+                    
+                    document.body.appendChild(confetti);
+                    
+                    setTimeout(() => {
+                        if (confetti.parentNode) {
+                            confetti.remove();
+                        }
+                    }, 3000);
+                }, i * 20);
+            }
+        }
+
+        // Next level
+        function nextLevel() {
+            gameState.level++;
+            document.getElementById('levelValue').textContent = gameState.level;
+            generateEquation();
+        }
+
+        // End game
+        function endGame() {
+            document.getElementById('finalScoreValue').textContent = gameState.score;
+            document.getElementById('gameOverScreen').style.display = 'block';
+            createConfetti();
+        }
+
+        // Update score display
+        function updateScore() {
+            document.getElementById('scoreValue').textContent = gameState.score;
+        }
+
+        // Restart game
+        function restartGame() {
+            gameState.score = 0;
+            gameState.level = 1;
+            gameState.selectedPiece = null;
+            
+            document.getElementById('gameOverScreen').style.display = 'none';
+            document.getElementById('levelValue').textContent = '1';
+            updateScore();
+            generateEquation();
+        }
+
+        // Setup check button
+        document.getElementById('checkButton').addEventListener('click', checkAnswer);
+
+        // Initialize game
+        function initGame() {
+            setupSlotEvents();
+            generateEquation();
+        }
+
+        // Start game when page loads
+        window.addEventListener('load', initGame);
+    </script>
+</body>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chọn số đúng - Thân thiện cho bé</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      background: linear-gradient(135deg,#ffecd2,#fcb69f);
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      text-align:center;
+      overflow:hidden;
+    }
+    h2 { font-size: 36px; color:#ff6b6b; margin-bottom:15px; }
+    .range-buttons button {
+      margin: 5px;
+      padding: 15px 25px;
+      font-size: 22px;
+      border:none;
+      border-radius: 20px;
+      background: linear-gradient(45deg,#6a11cb,#2575fc);
+      color:white;
+      cursor:pointer;
+      transition: transform 0.3s;
+    }
+    .range-buttons button:hover { transform:scale(1.1); }
+    .container {
+      background:#fffaf0;
+      padding:30px;
+      border-radius:20px;
+      box-shadow:0 8px 20px rgba(0,0,0,0.2);
+      max-width:800px;
+      animation: popIn 0.7s ease;
+    }
+    @keyframes popIn { from{transform:scale(0.7);opacity:0;} to{transform:scale(1);opacity:1;} }
+    .image {
+      margin:20px;
+      font-size:60px;
+      animation: bounce 2s infinite;
+    }
+    @keyframes bounce {
+      0%,100%{transform:translateY(0);} 50%{transform:translateY(-20px);}
+    }
+    .options button {
+      margin: 10px;
+      padding: 20px 30px;
+      font-size: 28px;
+      border:none;
+      border-radius: 50%;
+      background: linear-gradient(45deg,#ff9a9e,#fad0c4);
+      color:#fff;
+      cursor:pointer;
+      box-shadow:0 4px 10px rgba(0,0,0,0.2);
+      transition: transform 0.3s, background 0.3s;
+    }
+    .options button:hover { transform:scale(1.1); background:linear-gradient(45deg,#fbc2eb,#a6c1ee); }
+    #result {
+      font-size:28px;
+      margin-top:15px;
+      font-weight:bold;
+    }
+    .celebration { display:none; font-size:50px; margin-top:10px; }
+    .confetti {
+      position: fixed;
+      width: 10px; height: 10px;
+      top:-10px;
+      opacity:0.9;
+      animation: fall linear forwards;
+    }
+    @keyframes fall { to { transform: translateY(100vh) rotate(720deg); opacity:1; } }
+  </style>
+</head>
+<body>
+  <h2>🎯 Chọn số đếm đúng 🎯</h2>
+  <div class="range-buttons">
+    <button onclick="setRange(1,5)">1-5</button>
+    <button onclick="setRange(5,10)">5-10</button>
+    <button onclick="setRange(10,20)">10-20</button>
+  </div>
+  <div class="container">
+    <h2>Chọn số tương ứng với hình</h2>
+    <div id="image-container" class="image"></div>
+    <div id="options-container" class="options"></div>
+    <p id="result"></p>
+    <div id="celebration" class="celebration">🎉🎊 Tuyệt vời! 🎊🎉</div>
+    <audio id="correctSound" src="https://www.soundjay.com/button/beep-07.wav"></audio>
+    <audio id="wrongSound" src="https://www.soundjay.com/button/beep-10.wav"></audio>
+  </div>
+
+  <script>
+    let minRange=1, maxRange=5;
+    const animals=["🦁","🐯","🐘","🦒","🦓","🐎","🐄","🐖","🐑","🐕","🐈","🐇","🐻","🐼","🦊","🐺","🦘","🐒","🐪","🦌"];
+
+    function setRange(min,max){ minRange=min; maxRange=max; loadGame(); }
+
+    function getFilteredImages(){
+      return animals.slice(0, maxRange).map((animal,i)=>({number:i+1,img:animal.repeat(i+1)})).filter(item=>item.number>=minRange);
+    }
+
+    function getRandomImage(){ const imgs=getFilteredImages(); return imgs[Math.floor(Math.random()*imgs.length)]; }
+
+    let currentImage=getRandomImage();
+    const imageContainer=document.getElementById("image-container");
+    const optionsContainer=document.getElementById("options-container");
+    const resultText=document.getElementById("result");
+    const celebration=document.getElementById("celebration");
+    const correctSound=document.getElementById("correctSound");
+    const wrongSound=document.getElementById("wrongSound");
+
+    function loadGame(){
+      currentImage=getRandomImage();
+      imageContainer.innerHTML=`<div>${currentImage.img}</div>`;
+      optionsContainer.innerHTML="";
+      resultText.textContent="";
+      celebration.style.display="none";
+
+      let opts=[];
+      for(let i=minRange;i<=maxRange;i++){ if(i!==currentImage.number) opts.push(i); }
+      opts=opts.sort(()=>0.5-Math.random()).slice(0,3);
+      opts.push(currentImage.number);
+      opts.sort(()=>0.5-Math.random());
+
+      opts.forEach(o=>{
+        const btn=document.createElement("button");
+        btn.textContent=o;
+        btn.onclick=()=>checkAnswer(o);
+        optionsContainer.appendChild(btn);
+      });
+    }
+
+    function checkAnswer(sel){
+      if(sel===currentImage.number){
+        resultText.textContent="✔️ Chính xác!";
+        celebration.style.display="block";
+        correctSound.play();
+        launchConfetti();
+        setTimeout(()=>{loadGame();},2000);
+      } else {
+        resultText.textContent="❌ Sai rồi!";
+        wrongSound.play();
+      }
+    }
+
+    function launchConfetti(){
+      for(let i=0;i<80;i++){
+        let c=document.createElement("div");
+        c.classList.add("confetti");
+        document.body.appendChild(c);
+        c.style.left=Math.random()*window.innerWidth+"px";
+        c.style.backgroundColor=`hsl(${Math.random()*360},100%,50%)`;
+        c.style.animationDuration=(Math.random()*3+2)+"s";
+        setTimeout(()=>c.remove(),5000);
+      }
+    }
+
+    loadGame();
+  </script>
+</body>
+</html>
