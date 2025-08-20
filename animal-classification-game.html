@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=960">
+    <title>Phân Loại Động Vật - STEAM Science</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 25px;
+            box-shadow: 0 25px 70px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 1400px;
+            padding: 40px;
+            position: relative;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #764ba2;
+            font-size: 3em;
+            margin-bottom: 15px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.1);
+            animation: titleBounce 2s ease infinite;
+        }
+
+        @keyframes titleBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .score-item {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 15px;
+            font-size: 1.3em;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            min-width: 150px;
+            text-align: center;
+        }
+
+        .game-area {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+
+        .animals-section {
+            background: #f8f9fa;
+            border-radius: 20px;
+            padding: 30px;
+            border: 3px solid #dee2e6;
+        }
+
+        .animals-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            min-height: 120px;
+        }
+
+        .animal-card {
+            width: 100px;
+            height: 100px;
+            background: white;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            border: 3px solid #e0e0e0;
+            position: relative;
+        }
+
+        .animal-card:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            border-color: #764ba2;
+        }
+
+        .animal-card.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+            transform: rotate(5deg);
+        }
+
+        .animal-emoji {
+            font-size: 3em;
+            margin-bottom: 5px;
+        }
+
+        .animal-name {
+            font-size: 0.9em;
+            color: #495057;
+            font-weight: bold;
+        }
+
+        .habitats-section {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+        }
+
+        .habitat-zone {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            border-radius: 20px;
+            padding: 20px;
+            min-height: 250px;
+            border: 4px dashed #6c757d;
+            position: relative;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .habitat-zone.ocean {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            border-color: #0099cc;
+        }
+
+        .habitat-zone.sky {
+            background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
+            border-color: #3366cc;
+        }
+
+        .habitat-zone.forest {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            border-color: #228b22;
+        }
+
+        .habitat-zone.hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border-style: solid;
+            border-width: 4px;
+        }
+
+        .habitat-zone.correct-drop {
+            animation: correctPulse 0.6s ease;
+        }
+
+        .habitat-zone.wrong-drop {
+            animation: wrongShake 0.5s ease;
+        }
+
+        @keyframes correctPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); background: #4caf50; }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes wrongShake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+            20%, 40%, 60%, 80% { transform: translateX(10px); }
+        }
+
+        .habitat-title {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 15px;
+        }
+
+        .habitat-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.2));
+        }
+
+        .animals-in-habitat {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .placed-animal {
+            background: white;
+            border-radius: 10px;
+            padding: 8px;
+            font-size: 2em;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+            animation: placeAnimal 0.5s ease;
+        }
+
+        @keyframes placeAnimal {
+            from {
+                transform: scale(0) rotate(180deg);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            text-transform: uppercase;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-reset:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(245, 87, 108, 0.4);
+        }
+
+        .btn-check {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-check:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(118, 75, 162, 0.4);
+        }
+
+        /* Notification system */
+        .notification {
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 20px 40px;
+            border-radius: 20px;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: white;
+            z-index: 1000;
+            animation: notificationPop 0.5s ease;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            display: none;
+            white-space: nowrap;
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
+        }
+
+        .notification.show {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        @keyframes notificationPop {
+            0% {
+                transform: translateX(-50%) scale(0);
+                opacity: 0;
+            }
+            50% {
+                transform: translateX(-50%) scale(1.1);
+            }
+            100% {
+                transform: translateX(-50%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .notification-icon {
+            font-size: 1.5em;
+        }
+
+        /* Victory screen */
+        .victory-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .victory-content {
+            background: white;
+            border-radius: 30px;
+            padding: 50px;
+            text-align: center;
+            animation: victoryBounce 0.8s ease;
+        }
+
+        @keyframes victoryBounce {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .victory-title {
+            font-size: 3em;
+            color: #4caf50;
+            margin-bottom: 20px;
+        }
+
+        .victory-stars {
+            font-size: 4em;
+            margin-bottom: 20px;
+            animation: starSpin 2s ease infinite;
+        }
+
+        @keyframes starSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .confetti {
+            position: fixed;
+            width: 15px;
+            height: 15px;
+            background: #f0f;
+            position: absolute;
+            animation: confettiFall 3s linear;
+        }
+
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .habitats-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .habitat-zone {
+                min-height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>🦁 Phân Loại Động Vật 🦁</h1>
+        </div>
+
+        <div class="score-board">
+            <div class="score-item">
+                <span>✅ Đúng: <span id="correctCount">0</span></span>
+            </div>
+            <div class="score-item">
+                <span>❌ Sai: <span id="wrongCount">0</span></span>
+            </div>
+            <div class="score-item">
+                <span>🎯 Còn lại: <span id="remainingCount">12</span></span>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <div class="animals-section">
+                <div class="animals-container" id="animalsContainer">
+                    <!-- Animals will be loaded here -->
+                </div>
+            </div>
+
+            <div class="habitats-section">
+                <div class="habitat-zone ocean" data-habitat="ocean">
+                    <div class="habitat-icon">🌊</div>
+                    <div class="habitat-title">Đại Dương</div>
+                    <div class="animals-in-habitat"></div>
+                </div>
+
+                <div class="habitat-zone sky" data-habitat="sky">
+                    <div class="habitat-icon">☁️</div>
+                    <div class="habitat-title">Bầu Trời</div>
+                    <div class="animals-in-habitat"></div>
+                </div>
+
+                <div class="habitat-zone forest" data-habitat="forest">
+                    <div class="habitat-icon">🌳</div>
+                    <div class="habitat-title">Rừng Xanh</div>
+                    <div class="animals-in-habitat"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-reset" onclick="resetGame()">🔄 Chơi Lại</button>
+            <button class="btn btn-check" onclick="checkAnswer()">✅ Kiểm Tra</button>
+        </div>
+    </div>
+
+    <div class="notification" id="notification">
+        <span class="notification-icon"></span>
+        <span class="notification-text"></span>
+    </div>
+
+    <div class="victory-screen" id="victoryScreen">
+        <div class="victory-content">
+            <div class="victory-title">🎉 Tuyệt Vời! 🎉</div>
+            <div class="victory-stars">⭐⭐⭐</div>
+            <p style="font-size: 1.5em; color: #666;">Bạn đã phân loại đúng tất cả động vật!</p>
+            <button class="btn btn-reset" onclick="resetGame()" style="margin-top: 20px;">Chơi Lại</button>
+        </div>
+    </div>
+
+    <script>
+        // Game data
+        const animals = [
+            {id: 1, name: 'Cá Heo', emoji: '🐬', habitat: 'ocean', info: 'Cá heo là động vật có vú thông minh, sống theo bầy đàn và giao tiếp bằng siêu âm!'},
+            {id: 2, name: 'Cá Mập', emoji: '🦈', habitat: 'ocean', info: 'Cá mập là thợ săn đại dương với hơn 400 loài khác nhau, có thể ngửi thấy máu từ xa!'},
+            {id: 3, name: 'Bạch Tuộc', emoji: '🐙', habitat: 'ocean', info: 'Bạch tuộc có 8 xúc tu, 3 quả tim và có thể thay đổi màu sắc để ngụy trang!'},
+            {id: 4, name: 'Cá Voi', emoji: '🐋', habitat: 'ocean', info: 'Cá voi là động vật có vú lớn nhất đại dương, có thể nặng đến 200 tấn!'},
+            {id: 5, name: 'Đại Bàng', emoji: '🦅', habitat: 'sky', info: 'Đại bàng là loài chim săn mồi mạnh mẽ, có thể nhìn xa gấp 8 lần con người!'},
+            {id: 6, name: 'Sư Tử', emoji: '🦁', habitat: 'forest', info: 'Sư tử là "chúa sơn lâm", sống theo bầy đàn và tiếng gầm có thể nghe xa 8km!'},
+            {id: 7, name: 'Báo', emoji: '🐆', habitat: 'forest', info: 'Báo là loài mèo lớn nhanh nhất, có thể chạy tới 120km/h trong thời gian ngắn!'},
+            {id: 8, name: 'Vịt Trời', emoji: '🦆', habitat: 'sky', info: 'Vịt trời là loài chim di cư, có thể bay hàng nghìn km mỗi năm!'},
+            {id: 9, name: 'Gấu', emoji: '🐻', habitat: 'forest', info: 'Gấu là động vật ăn tạp, có thể chạy nhanh 50km/h và leo trèo giỏi!'},
+            {id: 10, name: 'Hổ', emoji: '🐅', habitat: 'forest', info: 'Hổ là loài mèo lớn nhất, mỗi con có vân độc nhất như dấu vân tay!'},
+            {id: 11, name: 'Khỉ', emoji: '🐵', habitat: 'forest', info: 'Khỉ là động vật linh trưởng thông minh, sống theo đàn và dùng công cụ!'},
+            {id: 12, name: 'Sói', emoji: '🐺', habitat: 'forest', info: 'Sói sống theo bầy với hệ thống xã hội phức tạp, có thể tru xa đến 10km!'}
+        ];
+
+        // Game state
+        let correctCount = 0;
+        let wrongCount = 0;
+        let remainingCount = animals.length;
+        let placedAnimals = {};
+        let draggedAnimal = null;
+
+        // Initialize game
+        function initGame() {
+            loadAnimals();
+            setupDragAndDrop();
+            updateScore();
+        }
+
+        // Load animals
+        function loadAnimals() {
+            const container = document.getElementById('animalsContainer');
+            container.innerHTML = '';
+            
+            // Shuffle animals
+            const shuffled = [...animals].sort(() => Math.random() - 0.5);
+            
+            shuffled.forEach(animal => {
+                const card = document.createElement('div');
+                card.className = 'animal-card';
+                card.draggable = true;
+                card.dataset.animalId = animal.id;
+                card.dataset.habitat = animal.habitat;
+                card.innerHTML = `
+                    <div class="animal-emoji">${animal.emoji}</div>
+                    <div class="animal-name">${animal.name}</div>
+                `;
+                
+                // Add click event for showing info
+                card.addEventListener('click', (e) => {
+                    if (!e.target.closest('.dragging')) {
+                        showAnimalInfo(animal);
+                    }
+                });
+                
+                container.appendChild(card);
+            });
+        }
+
+        // Show animal info modal
+        function showAnimalInfo(animal) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: white;
+                padding: 30px;
+                border-radius: 20px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                z-index: 2000;
+                text-align: center;
+                max-width: 400px;
+            `;
+            
+            modal.innerHTML = `
+                <div style="font-size: 3em; margin-bottom: 15px;">${animal.emoji}</div>
+                <h2 style="color: #764ba2; margin-bottom: 15px; font-size: 1.8em;">${animal.name}</h2>
+                <p style="color: #666; line-height: 1.6; font-size: 1.2em; margin-bottom: 20px;">${animal.info}</p>
+                <button onclick="this.parentElement.remove()" style="
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    border: none;
+                    padding: 10px 30px;
+                    border-radius: 10px;
+                    font-size: 1.1em;
+                    cursor: pointer;
+                    font-weight: bold;
+                ">Đóng</button>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Click outside to close
+            setTimeout(() => {
+                const closeOnClick = (e) => {
+                    if (!modal.contains(e.target)) {
+                        modal.remove();
+                        document.removeEventListener('click', closeOnClick);
+                    }
+                };
+                document.addEventListener('click', closeOnClick);
+            }, 100);
+        }
+
+        // Setup drag and drop
+        function setupDragAndDrop() {
+            // Drag start
+            document.addEventListener('dragstart', (e) => {
+                if (e.target.classList.contains('animal-card')) {
+                    draggedAnimal = {
+                        element: e.target,
+                        id: e.target.dataset.animalId,
+                        habitat: e.target.dataset.habitat,
+                        emoji: e.target.querySelector('.animal-emoji').textContent,
+                        name: e.target.querySelector('.animal-name').textContent
+                    };
+                    e.target.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                }
+            });
+
+            // Drag end
+            document.addEventListener('dragend', (e) => {
+                if (e.target.classList.contains('animal-card')) {
+                    e.target.classList.remove('dragging');
+                }
+            });
+
+            // Drag over
+            document.addEventListener('dragover', (e) => {
+                if (e.target.closest('.habitat-zone')) {
+                    e.preventDefault();
+                    const zone = e.target.closest('.habitat-zone');
+                    zone.classList.add('hover');
+                }
+            });
+
+            // Drag leave
+            document.addEventListener('dragleave', (e) => {
+                if (e.target.closest('.habitat-zone')) {
+                    const zone = e.target.closest('.habitat-zone');
+                    zone.classList.remove('hover');
+                }
+            });
+
+            // Drop
+            document.addEventListener('drop', (e) => {
+                const zone = e.target.closest('.habitat-zone');
+                if (zone && draggedAnimal) {
+                    e.preventDefault();
+                    zone.classList.remove('hover');
+                    
+                    const targetHabitat = zone.dataset.habitat;
+                    const isCorrect = targetHabitat === draggedAnimal.habitat;
+                    
+                    // Add animal to habitat
+                    const animalsInHabitat = zone.querySelector('.animals-in-habitat');
+                    const placedAnimalDiv = document.createElement('div');
+                    placedAnimalDiv.className = 'placed-animal';
+                    placedAnimalDiv.textContent = draggedAnimal.emoji;
+                    placedAnimalDiv.title = draggedAnimal.name;
+                    animalsInHabitat.appendChild(placedAnimalDiv);
+                    
+                    // Remove original card
+                    draggedAnimal.element.remove();
+                    
+                    // Update game state
+                    placedAnimals[draggedAnimal.id] = targetHabitat;
+                    remainingCount--;
+                    
+                    if (isCorrect) {
+                        correctCount++;
+                        zone.classList.add('correct-drop');
+                        showNotification('success', `Chính xác! ${draggedAnimal.name} sống ở ${getHabitatName(targetHabitat)}!`);
+                        playSound('success');
+                        
+                        // Happy animation
+                        placedAnimalDiv.style.animation = 'placeAnimal 0.5s ease, bounce 2s ease infinite';
+                    } else {
+                        wrongCount++;
+                        zone.classList.add('wrong-drop');
+                        showNotification('error', `Sai rồi! ${draggedAnimal.name} không sống ở ${getHabitatName(targetHabitat)}!`);
+                        playSound('error');
+                        
+                        // Sad animation
+                        placedAnimalDiv.style.animation = 'placeAnimal 0.5s ease, shake 0.5s ease';
+                        placedAnimalDiv.style.opacity = '0.5';
+                    }
+                    
+                    // Remove animation class
+                    setTimeout(() => {
+                        zone.classList.remove('correct-drop', 'wrong-drop');
+                    }, 600);
+                    
+                    updateScore();
+                    
+                    // Don't check completion automatically
+                    
+                    draggedAnimal = null;
+                }
+            });
+        }
+
+        // Get habitat name in Vietnamese
+        function getHabitatName(habitat) {
+            const names = {
+                'ocean': 'Đại Dương',
+                'sky': 'Bầu Trời',
+                'forest': 'Rừng Xanh'
+            };
+            return names[habitat] || habitat;
+        }
+
+        // Show notification
+        function showNotification(type, message) {
+            const notification = document.getElementById('notification');
+            
+            notification.className = `notification ${type} show`;
+            notification.innerHTML = `
+                <span class="notification-icon">${type === 'success' ? '✅' : '❌'}</span>
+                <span class="notification-text">${message}</span>
+                <span class="notification-icon">${type === 'success' ? '✅' : '❌'}</span>
+            `;
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 2500);
+        }
+
+        // Play sound
+        function playSound(type) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            if (type === 'success') {
+                // Happy sound - ascending notes
+                oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+                oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1); // E5
+                oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2); // G5
+                oscillator.type = 'sine';
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+            } else {
+                // Sad sound - descending notes
+                oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // A4
+                oscillator.frequency.setValueAtTime(349.23, audioContext.currentTime + 0.15); // F4
+                oscillator.frequency.setValueAtTime(261.63, audioContext.currentTime + 0.3); // C4
+                oscillator.type = 'sawtooth';
+                gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+            }
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+        }
+
+        // Update score
+        function updateScore() {
+            document.getElementById('correctCount').textContent = correctCount;
+            document.getElementById('wrongCount').textContent = wrongCount;
+            document.getElementById('remainingCount').textContent = remainingCount;
+        }
+
+        // Check answer
+        function checkAnswer() {
+            if (remainingCount === 0) {
+                const accuracy = (correctCount / animals.length) * 100;
+                
+                if (accuracy === 100) {
+                    showVictory();
+                    createConfetti();
+                } else if (accuracy >= 75) {
+                    showNotification('success', `🎉 Tốt lắm! Bạn đúng ${correctCount}/${animals.length} con vật!`);
+                } else {
+                    showNotification('error', `😅 Cố gắng hơn nhé! Bạn đúng ${correctCount}/${animals.length} con vật!`);
+                }
+            } else {
+                showNotification('error', `Còn ${remainingCount} con vật chưa được phân loại!`);
+            }
+        }
+
+        // Show victory screen
+        function showVictory() {
+            const victoryScreen = document.getElementById('victoryScreen');
+            victoryScreen.style.display = 'flex';
+            
+            // Victory sound
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const notes = [523.25, 587.33, 659.25, 783.99, 880, 987.77]; // C5 to B5
+            
+            notes.forEach((freq, index) => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                oscillator.frequency.value = freq;
+                oscillator.type = 'sine';
+                
+                const startTime = audioContext.currentTime + index * 0.1;
+                gainNode.gain.setValueAtTime(0.3, startTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
+                
+                oscillator.start(startTime);
+                oscillator.stop(startTime + 0.3);
+            });
+        }
+
+        // Create confetti
+        function createConfetti() {
+            const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f7dc6f', '#bb8fce', '#85c88a'];
+            
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + '%';
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.animationDelay = Math.random() * 3 + 's';
+                    confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                    document.body.appendChild(confetti);
+                    
+                    setTimeout(() => confetti.remove(), 3000);
+                }, i * 50);
+            }
+        }
+
+        // Reset game
+        function resetGame() {
+            correctCount = 0;
+            wrongCount = 0;
+            remainingCount = animals.length;
+            placedAnimals = {};
+            
+            // Clear habitats
+            document.querySelectorAll('.animals-in-habitat').forEach(container => {
+                container.innerHTML = '';
+            });
+            
+            // Hide victory screen
+            document.getElementById('victoryScreen').style.display = 'none';
+            
+            // Reload animals
+            loadAnimals();
+            updateScore();
+        }
+
+        // Add animations to CSS
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes bounce {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-10px); }
+            }
+            
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+                20%, 40%, 60%, 80% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Initialize game when page loads
+        window.addEventListener('load', initGame);
+    </script>
+</body>
+</html>
