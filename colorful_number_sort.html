@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trò Chơi Sắp Xếp Số</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            text-align: center;
+            background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        /* hiệu ứng nền động */
+        body::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at center, #ffd6e8, transparent 70%),
+                        radial-gradient(circle at top left, #a0e9ff, transparent 60%),
+                        radial-gradient(circle at bottom right, #b5ff9e, transparent 60%);
+            background-size: 200% 200%;
+            animation: moveBg 20s linear infinite;
+            z-index: -1;
+        }
+        @keyframes moveBg {
+            0% { transform: translate(0,0) scale(1); }
+            50% { transform: translate(10%, 10%) scale(1.2); }
+            100% { transform: translate(0,0) scale(1); }
+        }
+        .container {
+            max-width: 900px; /* phóng to giao diện */
+            background: #fff5f5;
+            padding: 40px;
+            border-radius: 25px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+            animation: popIn 0.8s ease;
+            position: relative;
+            z-index: 1;
+        }
+        h2 {
+            color: #ff6b6b;
+            margin-bottom: 25px;
+            font-size: 32px;
+        }
+        input[type="number"] {
+            padding: 12px;
+            border-radius: 12px;
+            border: 2px solid #ff6b6b;
+            width: 100px;
+            text-align: center;
+            font-size: 18px;
+            margin: 8px;
+        }
+        .sortable {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+        .number {
+            width: 90px;
+            height: 90px;
+            font-size: 28px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            color: white;
+            cursor: grab;
+            user-select: none;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+            transition: transform 0.3s ease;
+        }
+        .number.dragging {
+            opacity: 0.5;
+            transform: scale(1.2);
+        }
+        .btn {
+            margin-top: 25px;
+            padding: 14px 30px;
+            font-size: 20px;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease;
+        }
+        .btn:hover { transform: scale(1.08); }
+        #message {
+            font-size: 24px;
+            margin-top: 25px;
+            font-weight: bold;
+        }
+        #message.correct { color: #1dd1a1; animation: bounce 1s; }
+        #message.wrong { color: #ee5253; animation: shake 0.6s; }
+        #message.info { color: #ff9f43; animation: fadeIn 0.5s; }
+
+        @keyframes popIn {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: red;
+            top: -10px;
+            opacity: 0.8;
+            animation: fall linear forwards;
+        }
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🎲 Sắp xếp số theo thứ tự tăng dần 🎲</h2>
+        <label>Nhập khoảng số:</label>
+        <input type="number" id="n1" placeholder="Từ">
+        <input type="number" id="n2" placeholder="Đến">
+        <button class="btn" onclick="generateNumbers()">✨ Tạo số ✨</button>
+        <div class="sortable" id="sortableList"></div>
+        <button class="btn" onclick="checkOrder()">✅ Kiểm tra</button>
+        <button class="btn" onclick="resetGame()">🔄 Chơi lại</button>
+        <p id="message"></p>
+    </div>
+
+    <script>
+        function getRandomNumbers(n1, n2, count) {
+            let numbers = new Set();
+            while (numbers.size < count) {
+                numbers.add(Math.floor(Math.random() * (n2 - n1 + 1)) + n1);
+            }
+            return Array.from(numbers);
+        }
+
+        function generateNumbers() {
+            let n1 = parseInt(document.getElementById("n1").value);
+            let n2 = parseInt(document.getElementById("n2").value);
+            let message = document.getElementById("message");
+
+            if (isNaN(n1) || isNaN(n2) || n1 >= n2) {
+                message.innerText = "⚠️ Vui lòng nhập khoảng số hợp lệ!";
+                message.className = "info";
+                return;
+            }
+
+            // kiểm tra điều kiện khoảng cách đủ để tạo 5 số khác nhau
+            if (n2 - n1 < 4) {
+                message.innerText = "⚠️ Khoảng số quá hẹp! Số thứ 2 cần lớn hơn số thứ 1 ít nhất 4 đơn vị để tạo được dãy 5 số.";
+                message.className = "info";
+                return;
+            }
+
+            let numbers = getRandomNumbers(n1, n2, 5);
+            let sortableList = document.getElementById("sortableList");
+            sortableList.innerHTML = "";
+
+            numbers.forEach(num => {
+                let div = document.createElement("div");
+                div.classList.add("number");
+                div.draggable = true;
+                div.innerText = num;
+                div.dataset.value = num;
+                div.addEventListener("dragstart", dragStart);
+                div.addEventListener("dragover", dragOver);
+                div.addEventListener("drop", drop);
+                div.addEventListener("dragend", ()=>div.classList.remove("dragging"));
+                sortableList.appendChild(div);
+            });
+
+            message.innerText = ""; // clear message when new numbers generated
+            message.className = "";
+        }
+
+        function dragStart(event) {
+            event.dataTransfer.setData("text", event.target.dataset.value);
+            event.target.classList.add("dragging");
+        }
+
+        function dragOver(event) { event.preventDefault(); }
+
+        function drop(event) {
+            event.preventDefault();
+            let draggedValue = event.dataTransfer.getData("text");
+            let targetValue = event.target.dataset.value;
+
+            let draggedElement = document.querySelector(`[data-value='${draggedValue}']`);
+            let targetElement = document.querySelector(`[data-value='${targetValue}']`);
+
+            if (draggedElement && targetElement) {
+                let tempText = draggedElement.innerText;
+                draggedElement.innerText = targetElement.innerText;
+                targetElement.innerText = tempText;
+
+                draggedElement.dataset.value = targetValue;
+                targetElement.dataset.value = draggedValue;
+            }
+        }
+
+        function checkOrder() {
+            let numbers = Array.from(document.querySelectorAll(".number"))
+                .map(div => parseInt(div.dataset.value));
+            let sortedNumbers = [...numbers].sort((a, b) => a - b);
+
+            let message = document.getElementById("message");
+            if (JSON.stringify(numbers) === JSON.stringify(sortedNumbers)) {
+                message.innerText = "🎉 Chính xác! Bạn đã sắp xếp đúng! 🎉";
+                message.className = "correct";
+                launchConfetti();
+            } else {
+                message.innerText = "❌ Sai rồi, thử lại nhé! ❌";
+                message.className = "wrong";
+            }
+
+            setTimeout(()=>{ message.innerText = ""; message.className=""; },3000);
+        }
+
+        function resetGame(){
+            document.getElementById("sortableList").innerHTML = "";
+            document.getElementById("message").innerText = "";
+            document.getElementById("message").className = "";
+            document.getElementById("n1").value = ""; // xóa input số
+            document.getElementById("n2").value = "";
+        }
+
+        function launchConfetti() {
+            for (let i = 0; i < 100; i++) {
+                let confetti = document.createElement("div");
+                confetti.classList.add("confetti");
+                document.body.appendChild(confetti);
+
+                confetti.style.left = Math.random() * window.innerWidth + "px";
+                confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                confetti.style.animationDuration = (Math.random() * 3 + 2) + "s";
+                confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+
+                setTimeout(()=>{ confetti.remove(); }, 5000);
+            }
+        }
+    </script>
+</body>
+</html>
