@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Khám Phá Hệ Mặt Trời</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            width: 98vw;
+            max-width: 1400px;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        h1 {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 15px;
+            font-size: 2em;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 20px rgba(255, 255, 255, 0.5); }
+            to { text-shadow: 0 0 30px rgba(255, 255, 255, 0.8), 0 0 40px rgba(100, 200, 255, 0.8); }
+        }
+
+        .main-content {
+            display: flex;
+            gap: 20px;
+            align-items: stretch;
+        }
+
+        .solar-system-wrapper {
+            flex: 1;
+            background: radial-gradient(ellipse at center, #1a1a2e 0%, #0f0f1e 100%);
+            border-radius: 20px;
+            position: relative;
+            min-height: 600px;
+            overflow: hidden;
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .solar-system {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .sun {
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle at 30% 30%, #fff5b4, #ffeb3b, #ff9800, #ff5722);
+            border-radius: 50%;
+            box-shadow: 0 0 60px #ff9800, 0 0 100px #ff5722;
+            animation: pulse 4s infinite;
+            position: absolute;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { 
+                box-shadow: 0 0 60px #ff9800, 0 0 100px #ff5722;
+                transform: scale(1);
+            }
+            50% { 
+                box-shadow: 0 0 80px #ff9800, 0 0 120px #ff5722;
+                transform: scale(1.05);
+            }
+        }
+
+        .orbit {
+            position: absolute;
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .planet-slot {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.05);
+            z-index: 5;
+        }
+
+        .planet-slot.drag-over {
+            border-color: #ffd54f;
+            background: rgba(255, 213, 79, 0.2);
+            transform: scale(1.1);
+        }
+
+        .planet-slot.correct {
+            border-color: #4ade80;
+            background: rgba(74, 222, 128, 0.1);
+            box-shadow: 0 0 20px rgba(74, 222, 128, 0.5);
+            animation: correctPulse 0.6s ease;
+        }
+
+        @keyframes correctPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .side-panel {
+            width: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .planets-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 35px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 35px;
+            backdrop-filter: blur(5px);
+        }
+
+        .planet {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            cursor: grab;
+            transition: transform 0.3s;
+            position: relative;
+            margin: 0 auto;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+        }
+
+        .planet:active {
+            cursor: grabbing;
+        }
+
+        .planet:hover {
+            transform: scale(1.15) translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7);
+        }
+
+        .planet.dragging {
+            opacity: 0.7;
+            transform: scale(1.2);
+            z-index: 1000;
+        }
+
+        /* Realistic planet styles */
+        .planet[data-name="Sao Thủy"] {
+            background-image: url("https://cdn-icons-png.flaticon.com/512/1086/1086121.png");
+			background-size: cover;
+        }
+
+        .planet[data-name="Sao Kim"] {
+            background-image: url("https://cdn-icons-png.flaticon.com/512/360/360854.png");
+			background-size: cover;
+        }
+
+        .planet[data-name="Trái Đất"] {
+            background-image: url("https://cdn-icons-png.flaticon.com/512/5185/5185016.png");
+			background-size: cover;
+        }
+
+        .planet[data-name="Sao Hỏa"] {
+            background-image: url("https://cdn-icons-png.flaticon.com/512/360/360753.png");
+			background-size: cover;
+        }
+
+        .planet[data-name="Sao Mộc"] {
+            background-image: url("https://cdn-icons-png.flaticon.com/512/2949/2949022.png");
+			background-size: cover;
+        }
+        
+        .planet[data-name="Sao Thổ"] {
+            background-image: url("https://cdn-icons-png.flaticon.com/512/1751/1751904.png");
+			background-size: cover;
+        }
+
+        .planet[data-name="Sao Thiên Vương"] {
+            background-image: url("https://cdn-icons-png.flaticon.com/512/6989/6989438.png");
+			background-size: cover;
+        }
+
+        .planet[data-name="Sao Hải Vương"] {
+            background-image: url("https://cdn-icons-png.flaticon.com/512/3594/3594089.png");
+			background-size: cover;
+        }
+
+        .planet-label {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            color: #fff;
+            white-space: nowrap;
+            font-weight: bold;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.5);
+            padding: 2px 8px;
+            border-radius: 10px;
+            pointer-events: none;
+        }
+
+        .info-panel {
+            background: linear-gradient(135deg, rgba(103,58,183,0.9) 0%, rgba(63,81,181,0.9) 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 1em;
+            line-height: 1.5;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            backdrop-filter: blur(5px);
+        }
+
+        .score {
+            display: flex;
+            justify-content: space-around;
+            gap: 10px;
+        }
+
+        .score-item {
+            background: linear-gradient(135deg, rgba(76,175,80,0.9) 0%, rgba(56,142,60,0.9) 100%);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 20px;
+            flex: 1;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+        }
+
+        button {
+            background: linear-gradient(135deg, #f06292 0%, #ec407a 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1em;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(236,64,122,0.4);
+            width: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(236,64,122,0.6);
+        }
+
+        .celebration {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4em;
+            color: #4ade80;
+            font-weight: bold;
+            display: none;
+            animation: celebrate 1s ease;
+            z-index: 1000;
+            text-shadow: 0 0 30px rgba(74,222,128,0.8);
+        }
+
+        @keyframes celebrate {
+            0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); }
+            50% { transform: translate(-50%, -50%) scale(1.5) rotate(180deg); }
+            100% { transform: translate(-50%, -50%) scale(1) rotate(360deg); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        @media (max-width: 968px) {
+            .main-content {
+                flex-direction: column;
+            }
+            .side-panel {
+                width: 100%;
+            }
+            .planets-container {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            .solar-system-wrapper {
+                min-height: 400px;
+            }
+        }
+
+        @media (max-width: 568px) {
+            h1 { font-size: 1.5em; }
+            .sun { width: 60px; height: 60px; }
+            .planet-slot { width: 50px; height: 50px; }
+            .planet { width: 45px; height: 45px; }
+            .planets-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🚀 Khám Phá Hệ Mặt Trời 🌟</h1>
+        
+        <div class="main-content">
+            <div class="solar-system-wrapper">
+                <div class="solar-system" id="solarSystem">
+                    <div class="stars" id="stars"></div>
+                    <div class="sun"></div>
+                </div>
+            </div>
+            
+            <div class="side-panel">
+                <div class="planets-container" id="planetsContainer"></div>
+                
+                <div class="info-panel" id="infoPanel">
+                    Kéo các hành tinh vào đúng vị trí trên quỹ đạo! 🌍
+                </div>
+                
+                <div class="score">
+                    <div class="score-item">⭐ <span id="score">0</span></div>
+                    <div class="score-item">🎯 <span id="remaining">8</span></div>
+                </div>
+                
+                <button onclick="resetGame()">🔄 Chơi lại</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="celebration" id="celebration">🎉 Tuyệt vời! 🎉</div>
+
+    <script>
+        const planets = [
+            { name: 'Sao Thủy', orbit: 140, size: 35, info: 'Hành tinh nhỏ nhất và gần Mặt Trời nhất!' },
+            { name: 'Sao Kim', orbit: 180, size: 45, info: 'Hành tinh nóng nhất trong hệ Mặt Trời!' },
+            { name: 'Trái Đất', orbit: 220, size: 45, info: 'Ngôi nhà xanh của chúng ta!' },
+            { name: 'Sao Hỏa', orbit: 260, size: 40, info: 'Hành tinh đỏ - có thể có sự sống!' },
+            { name: 'Sao Mộc', orbit: 340, size: 60, info: 'Hành tinh lớn nhất hệ Mặt Trời!' },
+            { name: 'Sao Thổ', orbit: 400, size: 55, info: 'Hành tinh có vành đai đẹp nhất!' },
+            { name: 'Sao Thiên Vương', orbit: 460, size: 45, info: 'Hành tinh nghiêng một bên khi quay!' },
+            { name: 'Sao Hải Vương', orbit: 500, size: 45, info: 'Hành tinh xa nhất và lạnh nhất!' }
+        ];
+
+        let score = 0;
+        let remaining = 8;
+        let draggedPlanet = null;
+
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            for (let i = 0; i < 150; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                if (Math.random() > 0.8) {
+                    star.style.width = '3px';
+                    star.style.height = '3px';
+                }
+                starsContainer.appendChild(star);
+            }
+        }
+
+        function initGame() {
+            const solarSystem = document.getElementById('solarSystem');
+            const planetsContainer = document.getElementById('planetsContainer');
+            
+            // Create orbits and slots
+            planets.forEach((planet, index) => {
+                // Create orbit
+                const orbit = document.createElement('div');
+                orbit.className = 'orbit';
+                orbit.style.width = planet.orbit + 'px';
+                orbit.style.height = planet.orbit + 'px';
+                orbit.style.left = '50%';
+                orbit.style.top = '50%';
+                orbit.style.transform = 'translate(-50%, -50%)';
+                solarSystem.appendChild(orbit);
+                
+                // Create slot for planet
+                const slot = document.createElement('div');
+                slot.className = 'planet-slot';
+                slot.dataset.planetName = planet.name;
+                slot.style.width = (planet.size + 10) + 'px';
+                slot.style.height = (planet.size + 10) + 'px';
+                
+                // Calculate position on orbit - distribute evenly
+                const angle = (index * (360 / planets.length)) * Math.PI / 180;
+                const x = Math.cos(angle) * (planet.orbit / 2);
+                const y = Math.sin(angle) * (planet.orbit / 2);
+                
+                slot.style.left = `calc(50% + ${x}px - ${(planet.size + 10) / 2}px)`;
+                slot.style.top = `calc(50% + ${y}px - ${(planet.size + 10) / 2}px)`;
+                
+                // Add event listeners
+                slot.addEventListener('dragover', handleDragOver);
+                slot.addEventListener('dragleave', handleDragLeave);
+                slot.addEventListener('drop', handleDrop);
+                
+                solarSystem.appendChild(slot);
+            });
+            
+            // Create draggable planets
+            const shuffled = [...planets].sort(() => Math.random() - 0.5);
+            shuffled.forEach(planet => {
+                const planetDiv = document.createElement('div');
+                planetDiv.className = 'planet';
+                planetDiv.draggable = true;
+                planetDiv.dataset.name = planet.name;
+                planetDiv.style.width = planet.size + 'px';
+                planetDiv.style.height = planet.size + 'px';
+                
+                const label = document.createElement('div');
+                label.className = 'planet-label';
+                label.textContent = planet.name;
+                planetDiv.appendChild(label);
+                
+                planetDiv.addEventListener('dragstart', handleDragStart);
+                planetDiv.addEventListener('dragend', handleDragEnd);
+                
+                // Touch events for mobile
+                planetDiv.addEventListener('touchstart', handleTouchStart, {passive: false});
+                planetDiv.addEventListener('touchmove', handleTouchMove, {passive: false});
+                planetDiv.addEventListener('touchend', handleTouchEnd, {passive: false});
+                
+                planetsContainer.appendChild(planetDiv);
+            });
+        }
+
+        function handleDragStart(e) {
+            draggedPlanet = e.target.closest('.planet');
+            if (!draggedPlanet) return;
+            
+            draggedPlanet.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', draggedPlanet.innerHTML);
+        }
+
+        function handleDragEnd(e) {
+            if (draggedPlanet) {
+                draggedPlanet.classList.remove('dragging');
+            }
+            
+            // Remove all drag-over classes
+            document.querySelectorAll('.planet-slot').forEach(slot => {
+                slot.classList.remove('drag-over');
+            });
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            
+            const slot = e.currentTarget;
+            if (!slot.querySelector('.planet')) {
+                slot.classList.add('drag-over');
+            }
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const slot = e.currentTarget;
+            slot.classList.remove('drag-over');
+            
+            if (!draggedPlanet || !slot.classList.contains('planet-slot')) return;
+            
+            // Check if slot already has a planet
+            if (slot.querySelector('.planet')) return;
+            
+            const slotName = slot.dataset.planetName;
+            const planetName = draggedPlanet.dataset.name;
+            
+            if (slotName === planetName) {
+                // Correct placement
+                const planet = planets.find(p => p.name === planetName);
+                
+                // Clone the planet to place in slot
+                const planetClone = draggedPlanet.cloneNode(true);
+                planetClone.draggable = false;
+                planetClone.style.cursor = 'default';
+                planetClone.style.position = 'relative';
+                planetClone.style.margin = '0';
+                planetClone.classList.remove('dragging');
+                
+                slot.appendChild(planetClone);
+                slot.classList.add('correct');
+                
+                // Remove original planet
+                draggedPlanet.remove();
+                
+                score += 10;
+                remaining--;
+                updateScore();
+                
+                showInfo(`✨ ${planet.info}`);
+                showCelebration();
+                
+                if (remaining === 0) {
+                    setTimeout(() => {
+                        showInfo('🎊 Xuất sắc! Bạn đã hoàn thành hệ Mặt Trời! 🎊');
+                    }, 500);
+                }
+            } else {
+                // Wrong placement
+                showInfo('❌ Chưa đúng rồi! Thử lại nhé!');
+                draggedPlanet.style.animation = 'shake 0.5s';
+                setTimeout(() => {
+                    if (draggedPlanet) {
+                        draggedPlanet.style.animation = '';
+                    }
+                }, 500);
+            }
+            
+            draggedPlanet = null;
+        }
+
+        // Touch events for mobile support
+        let touchItem = null;
+        let touchOffset = {x: 0, y: 0};
+
+        function handleTouchStart(e) {
+            touchItem = e.target.closest('.planet');
+            if (!touchItem) return;
+            
+            const touch = e.touches[0];
+            const rect = touchItem.getBoundingClientRect();
+            touchOffset.x = touch.clientX - rect.left;
+            touchOffset.y = touch.clientY - rect.top;
+            
+            touchItem.style.position = 'fixed';
+            touchItem.style.zIndex = '1000';
+            touchItem.classList.add('dragging');
+        }
+
+        function handleTouchMove(e) {
+            if (!touchItem) return;
+            e.preventDefault();
+            
+            const touch = e.touches[0];
+            touchItem.style.left = (touch.clientX - touchOffset.x) + 'px';
+            touchItem.style.top = (touch.clientY - touchOffset.y) + 'px';
+        }
+
+        function handleTouchEnd(e) {
+            if (!touchItem) return;
+            
+            const touch = e.changedTouches[0];
+            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            const slot = elementBelow?.closest('.planet-slot');
+            
+            if (slot && !slot.querySelector('.planet')) {
+                draggedPlanet = touchItem;
+                const dropEvent = new Event('drop');
+                slot.dispatchEvent(dropEvent);
+            }
+            
+            touchItem.style.position = '';
+            touchItem.style.zIndex = '';
+            touchItem.classList.remove('dragging');
+            touchItem = null;
+        }
+
+        function updateScore() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('remaining').textContent = remaining;
+        }
+
+        function showInfo(text) {
+            const infoPanel = document.getElementById('infoPanel');
+            infoPanel.textContent = text;
+            infoPanel.style.animation = 'pulse 0.5s';
+            setTimeout(() => {
+                infoPanel.style.animation = '';
+            }, 500);
+        }
+
+        function showCelebration() {
+            const celebration = document.getElementById('celebration');
+            celebration.style.display = 'block';
+            setTimeout(() => {
+                celebration.style.display = 'none';
+            }, 1000);
+        }
+
+        function resetGame() {
+            const solarSystem = document.getElementById('solarSystem');
+            const planetsContainer = document.getElementById('planetsContainer');
+            
+            // Keep stars and sun
+            const stars = document.getElementById('stars');
+            const sun = solarSystem.querySelector('.sun');
+            
+            solarSystem.innerHTML = '';
+            solarSystem.appendChild(stars);
+            solarSystem.appendChild(sun);
+            
+            planetsContainer.innerHTML = '';
+            score = 0;
+            remaining = 8;
+            draggedPlanet = null;
+            updateScore();
+            showInfo('Kéo các hành tinh vào đúng vị trí trên quỹ đạo! 🌍');
+            initGame();
+        }
+
+        // Initialize game
+        createStars();
+        initGame();
+    </script>
+</body>
+</html>
